@@ -18,13 +18,13 @@ struct node {
 	int nodeNumber ;
 	string nodeId, referenceNodeId , childReferenceNodeId , genesisReferenceNodeId ;
 	string hashValue ;
-	vector<struct node> childNodes ; 
+	vector<int> childNodes ; 
 	double child_value_sum ;
 	bool isEncrypted ;
 		
 } ;
 
-int nodeCounter = 0, totalChoices = 4 ;
+int nodeCounter = 0, totalChoices = 7 ;
 
 struct node nodeArray[1000005] ;
 
@@ -34,8 +34,10 @@ void printStandard()
 	cout<<"1. Add a Genesis Node"<<endl ;
 	cout<<"2. Add set of Child Nodes of a particular Node"<<endl ;
 	cout<<"3. Add Child node that originates from a particular Node"<<endl ;
-	
-	cout<<"4. Exit"<<endl ;
+	cout<<"4. Print Longest Chain of Genesis node"<<endl ;
+	cout<<"5. Print Longest Chain of any node"<<endl ;
+	cout<<"6. Merge Two Nodes"<<endl ;
+	cout<<"7. Exit"<<endl ;
 	cout<<endl ;
 }
 
@@ -92,12 +94,61 @@ void debug()
 	}
 }
 
+bool vis[100005] ; 
+int dist[100005], farthest, far_dist ;
+
+void dfs(int u)
+{
+	vis[u] = true ;
+	for (auto it : nodeArray[u].childNodes)
+	{
+		if (!vis[it])
+		{
+			dist[it] = dist[u] + 1 ; 
+			if (dist[it] > far_dist)
+			{
+				far_dist = dist[it] ; 
+				farthest = it ; 
+			}
+			
+			dfs(it) ; 
+		}
+	}
+}
+
+vector<int> longestChain(int node_number)
+{
+	
+	memset(vis,false,sizeof(vis)) ; 
+	dist[node_number] = 0 ;
+	far_dist = 0 ; farthest = node_number ; 
+	
+	dfs(node_number) ; 
+	
+	int tempnode = farthest ; 
+	vector<int> ans ; 
+	
+	while ( tempnode != node_number )
+	{
+		ans.push_back(tempnode) ; 
+		tempnode = stoi( nodeArray[tempnode].referenceNodeId ) ; 
+	}
+	
+	ans.push_back(node_number) ; 
+	
+	reverse( ans.begin() , ans.end() ) ;
+	
+	return ans ; 
+	
+}
+
 int main()
 {
 	
 	cout<<"------------------------------ Start -----------------------------"<<endl ;
 	
 	int choice ; 
+	int genesis = -1 ; 
 	
 	while (1)
 	{
@@ -122,9 +173,16 @@ int main()
 			
 			// Adding a genesis node 
 			
+			if (genesis != -1)
+			{
+				cout<<"Genesis Node Already Exists"<<endl ; 
+				continue ;
+			}
+			
 			struct node newnode = inputNode( "" , to_string(nodeCounter) ) ;
 			
 			nodeArray[nodeCounter] = newnode ; 
+			genesis = nodeCounter ; 
 			nodeCounter++ ;
 			
 			cout<<"Genesis node created Successfully with node number = "<<(nodeCounter-1)<<endl ;
@@ -177,7 +235,7 @@ int main()
 				
 				nodeArray[node_number].child_value_sum += it.data.value ;
 				nodeArray[node_number].childReferenceNodeId += ( it.nodeId + "/" ) ; 
-				nodeArray[node_number].childNodes.push_back(it) ; 
+				nodeArray[node_number].childNodes.push_back(it.nodeNumber) ; 
 			}
 			
 			//debug() ; 
@@ -214,9 +272,62 @@ int main()
 			
 			nodeArray[node_number].child_value_sum += newnode.data.value ;
 			nodeArray[node_number].childReferenceNodeId += ( newnode.nodeId + "/" ) ; 
-			nodeArray[node_number].childNodes.push_back(newnode) ; 
+			nodeArray[node_number].childNodes.push_back(newnode.nodeNumber) ; 
 			
 			//debug() ; 
+			
+		}else if (choice == 4)
+		{
+			vector<int> temp = longestChain(genesis) ;
+			cout<<"The node numbers of longest Chain of genesis node are : " ;
+			for (auto it : temp) cout<<it<<" " ; 
+			cout<<endl ;  
+		}else if ( choice == 5)
+		{
+			int node_number ; 
+			cout<<"Enter Node Number : " ; cin>>node_number ; 
+			if (node_number >= nodeCounter)
+			{
+				cout<<"No Nodes exists with nodeNumber = "<<node_number<<endl ;
+				continue ;
+			}
+			vector<int> temp = longestChain(node_number) ;
+			cout<<"The node numbers of longest Chain of given node are : " ;
+			for (auto it : temp) cout<<it<<" " ; 
+			cout<<endl ;  
+		}else if (choice == 6)
+		{
+			int node1, node2 ; 
+			cout<<"Enter node number of first node to be merged : " ; cin>>node1 ; 
+			if (node1 >= nodeCounter)
+			{
+				cout<<"No Nodes exists with nodeNumber = "<<node1<<endl ;
+				continue ;
+			}
+			cout<<"Enter node number of second node to be merged : " ; cin>>node2 ; 
+			if (node2 >= nodeCounter)
+			{
+				cout<<"No Nodes exists with nodeNumber = "<<node2<<endl ;
+				continue ;
+			}
+			
+			vector<int> temp1 = longestChain(node1) ;
+			vector<int> temp2 = longestChain(node2) ; 
+			
+			if (temp1.size() >= temp2.size())
+				swap(node1,node2) ;
+			
+			// node1 is merged into node2
+			nodeArray[node2].data.value += nodeArray[node1].data.value ; 
+			for (auto it : nodeArray[node1].childNodes)
+			{
+				nodeArray[node2].childNodes.push_back(it) ; 
+			}	
+			
+			nodeArray[stoi( nodeArray[node1].referenceNodeId )].childNodes.erase( find( nodeArray[stoi( nodeArray[node1].referenceNodeId )].childNodes.begin() ,
+														nodeArray[stoi( nodeArray[node1].referenceNodeId )].childNodes.end() , node1) ) ;  
+			
+			cout<<"Both Nodes merged Successfully"<<endl ; 
 			
 		}
 		
