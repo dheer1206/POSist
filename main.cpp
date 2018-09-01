@@ -24,7 +24,7 @@ struct node {
 		
 } ;
 
-int nodeCounter = 0, totalChoices = 7 ;
+int nodeCounter = 0, totalChoices = 8 ;
 
 struct node nodeArray[1000005] ;
 
@@ -37,7 +37,8 @@ void printStandard()
 	cout<<"4. Print Longest Chain of Genesis node"<<endl ;
 	cout<<"5. Print Longest Chain of any node"<<endl ;
 	cout<<"6. Merge Two Nodes"<<endl ;
-	cout<<"7. Exit"<<endl ;
+	cout<<"7. Edit value of a node"<<endl ;
+	cout<<"8. Exit"<<endl ;
 	cout<<endl ;
 }
 
@@ -328,6 +329,48 @@ int main()
 														nodeArray[stoi( nodeArray[node1].referenceNodeId )].childNodes.end() , node1) ) ;  
 			
 			cout<<"Both Nodes merged Successfully"<<endl ; 
+			
+		}else if (choice == 7)
+		{
+			int node_number ; 
+			cout<<"Enter Node Number of node to be edited : " ; cin>>node_number ; 
+			if (node_number >= nodeCounter)
+			{
+				cout<<"No Nodes exists with nodeNumber = "<<node_number<<endl ;
+				continue ;
+			}
+			
+			cout<<"The Current value of node is : "<<nodeArray[node_number].data.value<<endl ;
+			
+			double value ; 
+			cout<<"Enter new value for the node : " ; cin>>value ;
+			
+			if (value < nodeArray[node_number].child_value_sum )
+			{
+				cout<<"---- Error! The value of node cannot be less than child value sum"<<endl ;
+				continue ;
+			}else
+			{
+				if (node_number != genesis)
+				{
+					double temp = nodeArray[stoi(nodeArray[node_number].referenceNodeId)].child_value_sum ;
+					double parentval = nodeArray[stoi(nodeArray[node_number].referenceNodeId)].data.value ;
+					
+					temp -= nodeArray[node_number].data.value ;
+					temp += value ; 
+					
+					if (parentval < temp)
+					{
+						cout<<"--- Error! The value of node must satisfy his parent sum condition"<<endl ;
+						continue ;
+					}
+					
+					nodeArray[stoi(nodeArray[node_number].referenceNodeId)].child_value_sum = temp ;
+					
+				}
+				nodeArray[node_number].data.value = value ; 
+			}
+			
 			
 		}
 		
