@@ -188,7 +188,7 @@ int main()
 			
 			cout<<"Genesis node created Successfully with node number = "<<(nodeCounter-1)<<endl ;
 			
-			debug() ; 
+			//debug() ; 
 			
 		}else if (choice == 2)
 		{
